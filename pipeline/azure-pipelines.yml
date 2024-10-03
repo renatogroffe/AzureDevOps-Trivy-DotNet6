@@ -20,21 +20,17 @@ stages:
     - script: |
         cd $(projectDirectory)
         cat $(projectFile)
-      displayName: Exibir o conteudo do arquivo .csproj antes dos ajustes com xml2
-    - script: |
-        sudo apt-get install xml2
-      displayName: Instalar o xml2
+      displayName: Exibir o conteudo do arquivo .csproj antes dos ajustes com sed
     - script: |
         cd $(projectDirectory)
-        xml2 < $(projectFile) | grep -v "/RestorePackagesWithLockFile" | xml2 > projectFile.tmp
-        echo "/Project/PropertyGroup/RestorePackagesWithLockFile=true" >> projectFile.tmp
-        xml2 < projectFile.tmp > $(projectFile)
-        rm projectFile.tmp
+        if ! grep -q '<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>' $(projectFile); then
+            sed -i '/<PropertyGroup>/a \    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>' $(projectFile)
+        fi
       displayName: Configurar o arquivo .csproj
     - script: |
         cd $(projectDirectory)
         cat $(projectFile)
-      displayName: Exibir o conteudo do arquivo .csproj apos ajustes com xml2
+      displayName: Exibir o conteudo do arquivo .csproj apos ajustes com sed
     - script: |
         sudo apt-get install wget apt-transport-https gnupg
         wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
